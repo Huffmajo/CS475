@@ -1,0 +1,9 @@
+#!/bin/bash
+
+# number of threads
+for t in 1 4 8
+do
+	echo NUMT=$t
+	g++ -DNUMT=$t project0.c -o project0 -lm -fopenmp
+	./project0
+done	
