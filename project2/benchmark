@@ -1,0 +1,18 @@
+#!/bin/bash 
+
+# number of threads
+for t in 1 2 4 6 8 10 12 16
+do
+	# number of trials
+	for s in 10 1000 100000 10000000
+	do
+		# insert number of threads to use and compile program 
+		g++ -DNUMT=$t -DNUMNODES=$s project2.c -o project2 -lm -fopenmp
+	
+		# run program
+		./project2
+	done	
+done	
+
+# clean-up compiled file
+rm project2
