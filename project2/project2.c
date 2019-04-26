@@ -4,8 +4,10 @@
  * Last updated: 4/24/2019
  * Sources: http://web.engr.oregonstate.edu/~mjb/cs575/Projects/proj02.html
  ***********************************************************/
-
-float Height( int, int );
+#include <stdlib.h>
+#include <time.h>
+#include <omp.h>
+#include <stdio.h>
 
 #define XMIN	 0.
 #define XMAX	 3.
@@ -52,7 +54,6 @@ float Height( int, int );
 #define BOTZ23  -8.
 #define BOTZ33  -3.
 
-
 float Height( int iu, int iv )	// iu,iv = 0 .. NUMNODES-1
 {
 	float u = (float)iu / (float)(NUMNODES-1);
@@ -71,7 +72,6 @@ float Height( int iu, int iv )	// iu,iv = 0 .. NUMNODES-1
 	float bv3 = v * v * v;
 
 	// finally, we get to compute something:
-
         float top =       bu0 * ( bv0*TOPZ00 + bv1*TOPZ01 + bv2*TOPZ02 + bv3*TOPZ03 )
                         + bu1 * ( bv0*TOPZ10 + bv1*TOPZ11 + bv2*TOPZ12 + bv3*TOPZ13 )
                         + bu2 * ( bv0*TOPZ20 + bv1*TOPZ21 + bv2*TOPZ22 + bv3*TOPZ23 )
@@ -88,17 +88,37 @@ float Height( int iu, int iv )	// iu,iv = 0 .. NUMNODES-1
 
 int main( int argc, char *argv[ ] )
 {
+#ifndef _OPENMP
+	fprintf( stderr, "No OpenMP support!\n" );
+	return 1;
+#endif
+
+	//set number of threads
+	omp_set_num_threads(NUMT);
+
 	// the area of a single full-sized tile:
 	float fullTileArea = (  ( ( XMAX - XMIN )/(float)(NUMNODES-1) )  *
 				( ( YMAX - YMIN )/(float)(NUMNODES-1) )  );
 
+	// calculate area for edges that aren't corners
+	float halfTileArea = fullTileArea/(float)2;
+
+	// calculate area for corners
+	float quarterTileArea = fullTileArea/(float)4;
+
+	float maxMegaCalcs = 0;
+	float avgMegaCalcs = 0;
+	float totalVolume = 0;
+
 	// sum up the weighted heights into the variable "volume"
 	// using an OpenMP for loop and a reduction:
-	#pragma omp parallel for default(none)
+	#pragma omp parallel for default(none), shared(fullTileArea, halfTileArea, quarterTileArea), reduction(+:totalVolume)
 	for( int i = 0; i < NUMNODES*NUMNODES; i++ )
 	{
 		int iu = i % NUMNODES;
 		int iv = i / NUMNODES;
+
+		
 
 	}
 }
