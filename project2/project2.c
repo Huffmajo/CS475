@@ -104,6 +104,10 @@ int main( int argc, char *argv[ ] )
 	double avgMegaHeights = 0.;
 	double volume = 0.;
 
+	// create file to export data to
+	FILE *fp;
+	fp = fopen("results.txt", "a");
+
 	// run multiple times to determine averages
 	for (int j = 0; j < NUMTRIES; j++)
 	{
@@ -145,15 +149,15 @@ int main( int argc, char *argv[ ] )
 		{
 			peakMegaHeights = megaHeights;
 		}
-		
-		// print volume of last trial of each config
-		// if (j == NUMTRIES - 1)
-		// {
-		//    	printf("%lf\n", volume);
-		// }
 	}
 
+	// calculate the average to check for consistency
 	avgMegaHeights /= (double) NUMTRIES;
+
+	// print out results
 	printf("%d\t%d\t%lf\t%lf\t%lf\n", NUMT, NUMNODES, avgMegaHeights, peakMegaHeights, volume);
 
+	// write results to file
+	fprintf(fp, "%d\t%d\t%lf\t%lf\t%lf\n", NUMT, NUMNODES, avgMegaHeights, peakMegaHeights, volume);
+	fclose(fp);
 }

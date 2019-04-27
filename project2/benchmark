@@ -1,5 +1,8 @@
 #!/bin/bash 
 
+# delete previous results.txt if it exists
+rm -f results.txt
+
 # print table headers
 echo "Threads Nodes   AvgPerf         PeakPerf        Volume"
 
@@ -7,7 +10,7 @@ echo "Threads Nodes   AvgPerf         PeakPerf        Volume"
 for t in 1 2 4 8 12 16
 do
 	# number of nodes
-	for s in 10 50 100 500 1000 5000
+	for s in 100 1000 2000 4000 6000 8000 10000 12000
 	do
 		# insert number of threads, nodes and tries to use and compile program 
 		g++ -DNUMT=$t -DNUMNODES=$s -DNUMTRIES=10 project2.c -o project2 -lm -fopenmp
