@@ -5,7 +5,6 @@
  * Sources: http://web.engr.oregonstate.edu/~mjb/cs575/Projects/proj02.html
  ***********************************************************/
 #include <stdlib.h>
-#include <time.h>
 #include <omp.h>
 #include <stdio.h>
 
@@ -106,19 +105,41 @@ int main( int argc, char *argv[ ] )
 	// calculate area for corners
 	float quarterTileArea = fullTileArea/(float)4;
 
-	float maxMegaCalcs = 0;
-	float avgMegaCalcs = 0;
-	float totalVolume = 0;
+	float maxMegaHeights = 0.;
+	float avgMegaHeights = 0.;
+	float volume = 0.;
+
+	float startTime = omp_get_wtime();
 
 	// sum up the weighted heights into the variable "volume"
 	// using an OpenMP for loop and a reduction:
-	#pragma omp parallel for default(none), shared(fullTileArea, halfTileArea, quarterTileArea), reduction(+:totalVolume)
+	#pragma omp parallel for default(none), shared(fullTileArea), reduction(+:volume)
 	for( int i = 0; i < NUMNODES*NUMNODES; i++ )
 	{
 		int iu = i % NUMNODES;
 		int iv = i / NUMNODES;
 
-		
+		// check if this is a corner space
+		if ((iu == 0 || iu == NUMNODES-1) && (iv == 0 || iv == NUMNODES-1))
+		{
+			volume += height(iu, iv) * (fullTileArea/(float)4);
+		}
+
+		// check if this is an edge space
+		else if (iu == 0 || iu == NUMNODES-1 || iv == 0 || iv == NUMNODES-1)
+		{
+			volume += height(iu, iv) * (fullTileArea/(float)2);
+		}
+
+		// otherwise, must be a full space
+		else
+		{
+			volume += height(iu, iv) * fullTileArea;
+		}
 
 	}
+
+	float endTime = omp_get_wtime();
+
+	float megaHeights = (float)(NUMNODES * NUMNODES) / (endTime - startTime) / 1000000.;
 }
