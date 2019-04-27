@@ -8,6 +8,7 @@
 #include <omp.h>
 #include <stdio.h>
 
+// ranges for Height function
 #define XMIN	 0.
 #define XMAX	 3.
 #define YMIN	 0.
@@ -99,47 +100,60 @@ int main( int argc, char *argv[ ] )
 	float fullTileArea = (  ( ( XMAX - XMIN )/(float)(NUMNODES-1) )  *
 				( ( YMAX - YMIN )/(float)(NUMNODES-1) )  );
 
-	// calculate area for edges that aren't corners
-	float halfTileArea = fullTileArea/(float)2;
+	double peakMegaHeights = 0.;
+	double avgMegaHeights = 0.;
+	double volume = 0.;
 
-	// calculate area for corners
-	float quarterTileArea = fullTileArea/(float)4;
-
-	float maxMegaHeights = 0.;
-	float avgMegaHeights = 0.;
-	float volume = 0.;
-
-	float startTime = omp_get_wtime();
-
-	// sum up the weighted heights into the variable "volume"
-	// using an OpenMP for loop and a reduction:
-	#pragma omp parallel for default(none), shared(fullTileArea), reduction(+:volume)
-	for( int i = 0; i < NUMNODES*NUMNODES; i++ )
+	// run multiple times to determine averages
+	for (int j = 0; j < NUMTRIES; j++)
 	{
-		int iu = i % NUMNODES;
-		int iv = i / NUMNODES;
+		double startTime = omp_get_wtime();
 
-		// check if this is a corner space
-		if ((iu == 0 || iu == NUMNODES-1) && (iv == 0 || iv == NUMNODES-1))
+		volume = 0.;
+
+		// sum up the weighted heights into the variable "volume"
+		// using an OpenMP for loop and a reduction:
+		#pragma omp parallel for default(none), shared(fullTileArea), reduction(+:volume)
+		for( int i = 0; i < NUMNODES*NUMNODES; i++ )
 		{
-			volume += height(iu, iv) * (fullTileArea/(float)4);
-		}
+			int iu = i % NUMNODES;
+			int iv = i / NUMNODES;
 
-		// check if this is an edge space
-		else if (iu == 0 || iu == NUMNODES-1 || iv == 0 || iv == NUMNODES-1)
+			// check if this is a corner space
+			if ((iu == 0 || iu == NUMNODES-1) && (iv == 0 || iv == NUMNODES-1))
+			{
+				volume += Height(iu, iv) * (fullTileArea/(float)4);
+			}
+
+			// check if this is an edge space
+			else if (iu == 0 || iu == NUMNODES-1 || iv == 0 || iv == NUMNODES-1)
+			{
+				volume += Height(iu, iv) * (fullTileArea/(float)2);
+			}
+
+			// otherwise, must be a full space
+			else
+			{
+				volume += Height(iu, iv) * fullTileArea;
+			}
+		}
+		
+		double endTime = omp_get_wtime();
+		double megaHeights = (double)(NUMNODES * NUMNODES) / (endTime - startTime) / 1000000.;
+		avgMegaHeights += megaHeights;
+		if (megaHeights > peakMegaHeights)
 		{
-			volume += height(iu, iv) * (fullTileArea/(float)2);
+			peakMegaHeights = megaHeights;
 		}
-
-		// otherwise, must be a full space
-		else
-		{
-			volume += height(iu, iv) * fullTileArea;
-		}
-
+		
+		// print volume of last trial of each config
+		// if (j == NUMTRIES - 1)
+		// {
+		//    	printf("%lf\n", volume);
+		// }
 	}
 
-	float endTime = omp_get_wtime();
+	avgMegaHeights /= (double) NUMTRIES;
+	printf("%d\t%d\t%lf\t%lf\t%lf\n", NUMT, NUMNODES, avgMegaHeights, peakMegaHeights, volume);
 
-	float megaHeights = (float)(NUMNODES * NUMNODES) / (endTime - startTime) / 1000000.;
 }
