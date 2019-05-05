@@ -1,0 +1,16 @@
+#!/bin/bash 
+
+# delete previous results.txt if it exists
+rm -f results.txt
+
+# print table headers
+echo "Date    Deer    Height          Precip          Temperature"
+
+# compile program 
+g++ project3.c -o project3 -lm -fopenmp
+	
+# run program
+./project3
+
+# clean-up compiled file
+rm project3
