@@ -13,8 +13,6 @@
 
 void MultNonSIMD(int size, float* a, float* b, float* c)
 {
-	float sum = 0.;
-
 	for (int i = 0; i < size; i++)
 	{
 		// array multiplication
@@ -28,7 +26,7 @@ float MultReductNonSIMD(int size, float* a, float* b)
 
 	for (int i = 0; i < size; i++)
 	{
-		// array multiplication
+		// array multiplication and reduction
 		sum += a[i] * b[i];
 	}
 
@@ -46,9 +44,15 @@ int main( int argc, char *argv[ ] )
 
 	double peakMegaMults = 0.;
 	double avgMegaMults = 0.;
+/*
 	float* a = new float [ARRAY_SIZE];
 	float* b = new float [ARRAY_SIZE];
 	float* c = new float [ARRAY_SIZE];
+*/
+
+	float* a = (float*)malloc(ARRAY_SIZE * sizeof(float));
+	float* b = (float*)malloc(ARRAY_SIZE * sizeof(float));
+	float* c = (float*)malloc(ARRAY_SIZE * sizeof(float));
 
 	// open results.txt to append results to later
 	FILE *fp;
@@ -112,4 +116,9 @@ int main( int argc, char *argv[ ] )
 	// append results to results.txt
 	fprintf(fp, "%d\t%lf\t%lf\n", ARRAY_SIZE, avgMegaMults, peakMegaMults);
 	fclose(fp);
+
+	//free memory
+	free(a);
+	free(b);
+	free(c);
 }
