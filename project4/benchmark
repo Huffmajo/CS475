@@ -1,0 +1,31 @@
+#!/bin/bash 
+
+# delete previous results.txt if it exists
+rm -f results.txt
+
+# print table headers
+
+
+# choose method of calculation
+# 0 = SIMD SSE multiplication
+# 1 = Non-SIMD multiplication 
+# 2 = SIMD multiplication + reduction
+# 3 = Non-SIMD multiplication + reduction
+for choice in 0 1 2 3
+do
+	# print method and table headers
+	echo $choice
+	echo "Table header"
+
+	# size of array
+	for size in 1024 4096 16384 65536 262144 1048576 4194304 16777216
+	do
+		g++ -DMETHOD=$choice -DARRAY_SIZE=$size project4.c simd.p4.cpp -o project4 -lm -fopenmp
+	done
+done
+
+# run program
+./project4
+
+# clean-up compiled file
+rm project4
