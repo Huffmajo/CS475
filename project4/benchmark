@@ -13,19 +13,32 @@ rm -f results.txt
 # 3 = Non-SIMD multiplication + reduction
 for choice in 0 1 2 3
 do
+	if [ $choice -eq 0 ]
+	then
+		header="SSE"
+	elif [ $choice -eq 1 ]
+	then
+		header="Non-SSE"		
+	elif [ $choice -eq 2 ]
+	then
+		header="SSE+reduct"
+ 	else
+		header="Non-SSE+reduct"
+	fi
+
 	# print method and table headers
-	echo $choice
-	echo "Table header"
+	echo $header
+	echo "ArraySize   AvgMega   Peak Mega"
 
 	# size of array
-	for size in 1024 4096 16384 65536 262144 1048576 4194304 16777216
+	for size in 1024 4096 16384 65536 262144 1048576 4194304 16777216 33554432
 	do
 		g++ -DMETHOD=$choice -DARRAY_SIZE=$size project4.c simd.p4.cpp -o project4 -lm -fopenmp
+
+		# run program
+		./project4
 	done
 done
-
-# run program
-./project4
 
 # clean-up compiled file
 rm project4

@@ -9,11 +9,23 @@
 #include <stdio.h>
 #include "simd.p4.h"
 
-void MultNonSIMD(int size, double* a, double* b, double* c, int reductFlag)
-{
-	// if reductFlag is 1, apply reduction to method
-	
+#define NUMTRIES 50
 
+void MultNonSIMD(int size, float* a, float* b, float* c, int reductFlag)
+{
+	double sum = 0.;
+
+	for (int i = 0; i < size; i++)
+	{
+		// array multiplication
+		c[i] = a[i] * b[i];
+
+		// if reductFlag is, also perform reduction		
+		if (reductFlag == 1)
+		{
+			sum += c[i];
+		}
+	}	
 }
 
 
@@ -27,14 +39,17 @@ int main( int argc, char *argv[ ] )
 
 	double peakMegaMults = 0.;
 	double avgMegaMults = 0.;
-	double* a[ARRAY_SIZE];
-	double* b[ARRAY_SIZE];
-	double* c[ARRAY_SIZE];
+	float* a = new float [ARRAY_SIZE];
+	float* b = new float [ARRAY_SIZE];
+	float* c = new float [ARRAY_SIZE];
+
+	// open results.txt to append results to later
+	FILE *fp;
+	fp = fopen("results.txt", "a");
 
 	// run multiple times to determine average and peak
 	for (int i = 0; i < NUMTRIES; i++)
 	{
-
 		// start timer
 		double startTime = omp_get_wtime();
 
@@ -53,7 +68,7 @@ int main( int argc, char *argv[ ] )
 
 			// SIMD multiply with reduction
 			case 2:
-				SimdMulSum(a, b, c, ARRAY_SIZE);
+				SimdMulSum(a, b, ARRAY_SIZE);
 				break;
 
 			// non-SIMD multiply with reduction
@@ -65,7 +80,6 @@ int main( int argc, char *argv[ ] )
 			default:
 				printf("Something has gone wrong. Unknown method number %d called\n", METHOD);
 				exit(1);
-				break;
 		}
 
 /*
@@ -97,5 +111,25 @@ int main( int argc, char *argv[ ] )
 */
 		// stop timer
 		double endTime = omp_get_wtime();
+
+		// get time and performance of run
+		double megaMults = (double)ARRAY_SIZE / (endTime - startTime) / 1000000.;
+
+		avgMegaMults += megaMults;
+
+		if (megaMults > peakMegaMults)
+		{
+			peakMegaMults = megaMults;
+		}
 	}
+	
+	// calculate average to gauge validity
+	avgMegaMults /= (double)NUMTRIES;
+
+	// print results
+	printf("%d\t%lf\t%lf\n", ARRAY_SIZE, avgMegaMults, peakMegaMults);
+
+	// append results to results.txt
+	fprintf(fp, "%d\t%lf\t%lf\n", ARRAY_SIZE, avgMegaMults, peakMegaMults);
+	fclose(fp);
 }
