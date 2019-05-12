@@ -29,7 +29,6 @@ do
 
 	# size of array
 	for size in 1024 4096 16384 65536 262144 1048576 4194304 16777216 33554432
-	# for size in 1000 10000 50000 1000000 5000000 10000000 50000000
 	do
 		g++ -DMETHOD=$choice -DARRAY_SIZE=$size project4.c simd.p4.cpp -o project4 -lm -fopenmp
 
