@@ -11,21 +11,28 @@
 
 #define NUMTRIES 50
 
-void MultNonSIMD(int size, float* a, float* b, float* c, int reductFlag)
+void MultNonSIMD(int size, float* a, float* b, float* c)
 {
-	double sum = 0.;
+	float sum = 0.;
 
 	for (int i = 0; i < size; i++)
 	{
 		// array multiplication
 		c[i] = a[i] * b[i];
-
-		// if reductFlag is, also perform reduction		
-		if (reductFlag == 1)
-		{
-			sum += c[i];
-		}
 	}	
+}
+
+float MultReductNonSIMD(int size, float* a, float* b)
+{
+	float sum = 0.;
+
+	for (int i = 0; i < size; i++)
+	{
+		// array multiplication
+		sum += a[i] * b[i];
+	}
+
+	return sum;
 }
 
 
@@ -63,7 +70,7 @@ int main( int argc, char *argv[ ] )
 
 			// non-SIMD multiply
 			case 1:
-				MultNonSIMD(ARRAY_SIZE, a, b, c, 0);
+				MultNonSIMD(ARRAY_SIZE, a, b, c);
 				break;
 
 			// SIMD multiply with reduction
@@ -73,7 +80,7 @@ int main( int argc, char *argv[ ] )
 
 			// non-SIMD multiply with reduction
 			case 3:
-				MultNonSIMD(ARRAY_SIZE, a, b, c, 1);
+				MultReductNonSIMD(ARRAY_SIZE, a, b);
 				break;
 
 			// if METHOD is an unexpected number
@@ -82,33 +89,6 @@ int main( int argc, char *argv[ ] )
 				exit(1);
 		}
 
-/*
-		if (METHOD == 0)
-		{
-
-		}
-		
-		else if ()
-		{
-
-		}
-
-		else if ()
-		{
-
-		}
-
-		else if ()
-		{
-
-		}
-
-		else 
-		{
-			printf("Unknown method %d called\n", METHOD);
-			exit 1;
-		}
-*/
 		// stop timer
 		double endTime = omp_get_wtime();
 
