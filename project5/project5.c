@@ -19,15 +19,15 @@
 #include "CL/cl_platform.h"
 
 
-#ifndef NMB
-#define	NMB			64
-#endif
+// #ifndef NMB
+// #define	NMB			64
+// #endif
 
-#define NUM_ELEMENTS		NMB*1024*1024
+// #define NUM_ELEMENTS		NMB * 1024 * 1024
 
-#ifndef LOCAL_SIZE
-#define	LOCAL_SIZE		64
-#endif
+// #ifndef LOCAL_SIZE
+// #define	LOCAL_SIZE		64
+// #endif
 
 #define	NUM_WORK_GROUPS		NUM_ELEMENTS/LOCAL_SIZE
 
@@ -80,11 +80,23 @@ main( int argc, char *argv[ ] )
 	float *hB = new float[ NUM_ELEMENTS ];
 	float *hC = new float[ NUM_ELEMENTS ];
 
+	// if running multiply-add, allocate additional float
+	if (METHOD)
+	{
+		float *hD = new float[ NUM_ELEMENTS ];
+	}
+
 	// fill the host memory buffers:
 
 	for( int i = 0; i < NUM_ELEMENTS; i++ )
 	{
 		hA[i] = hB[i] = (float) sqrt(  (double)i  );
+
+		// ****** MIGHT NEED THIS
+		// if (METHOD)
+		// {
+		// 	hC[i] = hA[i];
+		// }
 	}
 
 	size_t dataSize = NUM_ELEMENTS * sizeof(float);
@@ -115,6 +127,14 @@ main( int argc, char *argv[ ] )
 	if( status != CL_SUCCESS )
 		fprintf( stderr, "clCreateBuffer failed (3)\n" );
 
+	// create memory buffer for D if running multiply-add
+	if (METHOD)
+	{
+		cl_mem dD = clCreateBuffer( context, CL_MEM_WRITE_ONLY, dataSize, NULL, &status );
+		if( status != CL_SUCCESS )
+			fprintf( stderr, "clCreateBuffer failed (3)\n" );
+	}
+
 	// 6. enqueue the 2 commands to write the data from the host buffers to the device buffers:
 
 	status = clEnqueueWriteBuffer( cmdQueue, dA, CL_FALSE, 0, dataSize, hA, 0, NULL, NULL );
@@ -124,6 +144,14 @@ main( int argc, char *argv[ ] )
 	status = clEnqueueWriteBuffer( cmdQueue, dB, CL_FALSE, 0, dataSize, hB, 0, NULL, NULL );
 	if( status != CL_SUCCESS )
 		fprintf( stderr, "clEnqueueWriteBuffer failed (2)\n" );
+
+	// enqueue C if running multiply-add	
+	if (METHOD)
+	{
+		status = clEnqueueWriteBuffer( cmdQueue, dC, CL_FALSE, 0, dataSize, hB, 0, NULL, NULL );
+		if( status != CL_SUCCESS )
+			fprintf( stderr, "clEnqueueWriteBuffer failed (2)\n" );
+	}
 
 	Wait( cmdQueue );
 
@@ -164,9 +192,22 @@ main( int argc, char *argv[ ] )
 
 	// 9. create the kernel object:
 
-	cl_kernel kernel = clCreateKernel( program, "ArrayMult", &status );
-	if( status != CL_SUCCESS )
-		fprintf( stderr, "clCreateKernel failed\n" );
+	// use kernel for what method we are running
+	if (METHOD)
+	{
+		cl_kernel kernel = clCreateKernel( program, "ArrayMultAdd", &status );
+		if( status != CL_SUCCESS )
+			fprintf( stderr, "clCreateKernel failed\n" );
+	}
+	
+	else
+	{
+		cl_kernel kernel = clCreateKernel( program, "ArrayMult", &status );
+		if( status != CL_SUCCESS )
+			fprintf( stderr, "clCreateKernel failed\n" );
+	}
+
+	// CONINTUE HERE *SD(I@#$%(I@$#%)(#$UI%)(#I$%()#I$%()#$I%()#$I(%)#($%
 
 	// 10. setup the arguments to the kernel object:
 
@@ -221,7 +262,7 @@ main( int argc, char *argv[ ] )
 	}
 
 	fprintf( stderr, "%8d\t%4d\t%10d\t%10.3lf GigaMultsPerSecond\n",
-		NMB, LOCAL_SIZE, NUM_WORK_GROUPS, (double)NUM_ELEMENTS/(time1-time0)/1000000000. );
+		NUM_ELEMENTS, LOCAL_SIZE, NUM_WORK_GROUPS, (double)NUM_ELEMENTS/(time1-time0)/1000000000. );
 
 #ifdef WIN32
 	Sleep( 2000 );

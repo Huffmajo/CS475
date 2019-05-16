@@ -1,0 +1,44 @@
+#!/bin/bash 
+
+# delete previous results.txt if it exists
+rm -f results.txt
+
+
+# run array multiply and array multiply-add benchmarks
+
+# choose method of calculation
+# 0 = Array Multiply
+# 1 = Array Multiply-Add 
+for choice in 0 1
+do
+	if [ $choice -eq 0 ]
+	then
+		header="Array Multiply"
+ 	else
+		header="Array Multiply-Add"
+	fi
+
+	# print method and table headers
+	echo $header
+	echo "GlobalWorkSize   LocalWorkSize  Gigamults/second "
+
+	# global work size
+	for globalWork in 1000 5000 10000 50000 10000 500000 100000 5000000 10000000
+	do
+		# local work size
+		for localWork in 4 8 16 32 64 128 256 512 1024
+		do
+			# Define benchmark variables and compile
+			g++ -DMETHOD=$choice -DLOCAL_SIZE=$localWork -DNUM_ELEMENTS=$globalWork project5.c -o project5 -lm -fopenmp -lopencl
+
+			# run program
+			./project5
+		done
+	done
+	echo " "
+done
+
+# run array multiply with reduction benchmark
+
+# clean-up compiled file
+rm project5
