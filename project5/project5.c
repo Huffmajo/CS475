@@ -79,12 +79,7 @@ main( int argc, char *argv[ ] )
 	float *hA = new float[ NUM_ELEMENTS ];
 	float *hB = new float[ NUM_ELEMENTS ];
 	float *hC = new float[ NUM_ELEMENTS ];
-
-	// if running multiply-add, allocate additional float
-	if (METHOD)
-	{
-		float *hD = new float[ NUM_ELEMENTS ];
-	}
+	float *hD = new float[ NUM_ELEMENTS ];
 
 	// fill the host memory buffers:
 
@@ -92,11 +87,10 @@ main( int argc, char *argv[ ] )
 	{
 		hA[i] = hB[i] = (float) sqrt(  (double)i  );
 
-		// ****** MIGHT NEED THIS
-		// if (METHOD)
-		// {
-		// 	hC[i] = hA[i];
-		// }
+		if (METHOD == 1)
+		{
+			hC[i] = hA[i];
+		}
 	}
 
 	size_t dataSize = NUM_ELEMENTS * sizeof(float);
@@ -127,8 +121,7 @@ main( int argc, char *argv[ ] )
 	if( status != CL_SUCCESS )
 		fprintf( stderr, "clCreateBuffer failed (3)\n" );
 
-	// create memory buffer for D if running multiply-add
-	if (METHOD)
+	if (METHOD == 1)
 	{
 		cl_mem dD = clCreateBuffer( context, CL_MEM_WRITE_ONLY, dataSize, NULL, &status );
 		if( status != CL_SUCCESS )
@@ -146,7 +139,7 @@ main( int argc, char *argv[ ] )
 		fprintf( stderr, "clEnqueueWriteBuffer failed (2)\n" );
 
 	// enqueue C if running multiply-add	
-	if (METHOD)
+	if (METHOD == 1)
 	{
 		status = clEnqueueWriteBuffer( cmdQueue, dC, CL_FALSE, 0, dataSize, hB, 0, NULL, NULL );
 		if( status != CL_SUCCESS )
@@ -178,7 +171,7 @@ main( int argc, char *argv[ ] )
 
 	// 8. compile and link the kernel code:
 
-	char *options = { "" };
+	const char *options = { "" };
 	status = clBuildProgram( program, 1, &device, options, NULL, NULL );
 	if( status != CL_SUCCESS )
 	{
@@ -193,7 +186,7 @@ main( int argc, char *argv[ ] )
 	// 9. create the kernel object:
 
 	// use kernel for what method we are running
-	if (METHOD)
+	if (METHOD == 1)
 	{
 		cl_kernel kernel = clCreateKernel( program, "ArrayMultAdd", &status );
 		if( status != CL_SUCCESS )
@@ -206,8 +199,6 @@ main( int argc, char *argv[ ] )
 		if( status != CL_SUCCESS )
 			fprintf( stderr, "clCreateKernel failed\n" );
 	}
-
-	// CONINTUE HERE *SD(I@#$%(I@$#%)(#$UI%)(#I$%()#I$%()#$I%()#$I(%)#($%
 
 	// 10. setup the arguments to the kernel object:
 
@@ -223,6 +214,12 @@ main( int argc, char *argv[ ] )
 	if( status != CL_SUCCESS )
 		fprintf( stderr, "clSetKernelArg failed (3)\n" );
 
+	if (METHOD == 1)
+	{
+		status = clSetKernelArg( kernel, 3, sizeof(cl_mem), &dD );
+		if( status != CL_SUCCESS )
+			fprintf( stderr, "clSetKernelArg failed (3)\n" );
+	}
 
 	// 11. enqueue the kernel object for execution:
 
@@ -230,6 +227,7 @@ main( int argc, char *argv[ ] )
 	size_t localWorkSize[3]  = { LOCAL_SIZE,   1, 1 };
 
 	Wait( cmdQueue );
+
 	double time0 = omp_get_wtime( );
 
 	time0 = omp_get_wtime( );
@@ -243,12 +241,23 @@ main( int argc, char *argv[ ] )
 
 	// 12. read the results buffer back from the device to the host:
 
-	status = clEnqueueReadBuffer( cmdQueue, dC, CL_TRUE, 0, dataSize, hC, 0, NULL, NULL );
-	if( status != CL_SUCCESS )
+	// read results from right variable buffer depending on method we are running
+	if (METHOD == 1)
+	{
+		status = clEnqueueReadBuffer( cmdQueue, dD, CL_TRUE, 0, dataSize, hD, 0, NULL, NULL );
+		if( status != CL_SUCCESS )
 			fprintf( stderr, "clEnqueueReadBuffer failed\n" );
+	}
+
+	else
+	{
+		status = clEnqueueReadBuffer( cmdQueue, dC, CL_TRUE, 0, dataSize, hC, 0, NULL, NULL );
+		if( status != CL_SUCCESS )
+			fprintf( stderr, "clEnqueueReadBuffer failed\n" );
+	}
 
 	// did it work?
-
+/*
 	for( int i = 0; i < NUM_ELEMENTS; i++ )
 	{
 		float expected = hA[i] * hB[i];
@@ -260,7 +269,7 @@ main( int argc, char *argv[ ] )
 				//i, LookAtTheBits(hA[i]), LookAtTheBits(hB[i]), LookAtTheBits(hC[i]), LookAtTheBits(expected) );
 		}
 	}
-
+*/
 	fprintf( stderr, "%8d\t%4d\t%10d\t%10.3lf GigaMultsPerSecond\n",
 		NUM_ELEMENTS, LOCAL_SIZE, NUM_WORK_GROUPS, (double)NUM_ELEMENTS/(time1-time0)/1000000000. );
 

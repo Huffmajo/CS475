@@ -29,7 +29,8 @@ do
 		for localWork in 4 8 16 32 64 128 256 512 1024
 		do
 			# Define benchmark variables and compile
-			g++ -DMETHOD=$choice -DLOCAL_SIZE=$localWork -DNUM_ELEMENTS=$globalWork project5.c -o project5 -lm -fopenmp -lopencl
+			# g++ -DMETHOD=$choice -DLOCAL_SIZE=$localWork -DNUM_ELEMENTS=$globalWork project5.c -o project5 -lm -fopenmp -lOpenCL
+			g++ -o project5 project5.c /scratch/cuda-7.0/lib64/libOpenCL.so -DMETHOD=$choice -DLOCAL_SIZE=$localWork -DNUM_ELEMENTS=$globalWork -lm -fopenmp
 
 			# run program
 			./project5
