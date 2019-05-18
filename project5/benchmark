@@ -3,43 +3,63 @@
 # delete previous results.txt if it exists
 rm -f results.txt
 
+# run array multiply benchmark
+# print method and table headers
+echo "Array Multiply"
+echo "GlobalWorkSize LocalWorkSize NumWorkGroups Gigamults/second "
 
-# run array multiply and array multiply-add benchmarks
-
-# choose method of calculation
-# 0 = Array Multiply
-# 1 = Array Multiply-Add 
-for choice in 0 1
+# global work size
+for globalWork in 1024 4096 16384 65536 262144 1048576 4194304 16777216
 do
-	if [ $choice -eq 0 ]
-	then
-		header="Array Multiply"
- 	else
-		header="Array Multiply-Add"
-	fi
-
-	# print method and table headers
-	echo $header
-	echo "GlobalWorkSize   LocalWorkSize  Gigamults/second "
-
-	# global work size
-	for globalWork in 1024 4096 16384 65536 262144 1048576 4194304 16777216
+	# local work size
+	for localWork in 4 8 16 32 64 128 256 512 1024
 	do
-		# local work size
-		for localWork in 4 8 16 32 64 128 256 512 1024
-		do
-			# Define benchmark variables and compile
-			# g++ -DMETHOD=$choice -DLOCAL_SIZE=$localWork -DNUM_ELEMENTS=$globalWork project5.c -o project5 -lm -fopenmp -lOpenCL
-			g++ -o project5 project5.c /scratch/cuda-7.0/lib64/libOpenCL.so -DMETHOD=$choice -DLOCAL_SIZE=$localWork -DNUM_ELEMENTS=$globalWork -lm -fopenmp
+		# Define benchmark variables and compile
+		g++ -o project5 project5.c /scratch/cuda-7.0/lib64/libOpenCL.so -DLOCAL_SIZE=$localWork -DNUM_ELEMENTS=$globalWork -lm -fopenmp
 
-			# run program
-			./project5
-		done
+		# run program
+		./project5
 	done
-	echo " "
 done
+echo " "
+
+# run array multiply-add benchmark
+# print method and table headers
+echo "Array Multiply-Add"
+echo "GlobalWorkSize LocalWorkSize NumWorkGroups Gigamults/second "
+
+# global work size
+for globalWork in 1024 4096 16384 65536 262144 1048576 4194304 16777216
+do
+	# local work size
+	for localWork in 4 8 16 32 64 128 256 512 1024
+	do
+		# Define benchmark variables and compile
+		g++ -o project5 project5.c /scratch/cuda-7.0/lib64/libOpenCL.so -DMULTADD -DLOCAL_SIZE=$localWork -DNUM_ELEMENTS=$globalWork -lm -fopenmp
+
+		# run program
+		./project5
+	done
+done
+echo " "
 
 # run array multiply with reduction benchmark
+# print method and table headers
+echo "Array Multiply Reduction"
+echo "GlobalWorkSize LocalWorkSize NumWorkGroups Gigamults/second "
+
+# global work size
+for globalWork in 1024 4096 16384 65536 262144 1048576 4194304 16777216
+do
+	# local work size
+	for localWork in 4 8 16 32 64 128 256 512 1024
+	do
+		# Define benchmark variables and compile
+		# ENTER STUFF HERE
+		# run program
+		#ENTER STUFF HERE
+	done
+done
 
 # clean-up compiled file
 rm project5

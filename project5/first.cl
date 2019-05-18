@@ -1,13 +1,13 @@
 kernel
-void ArrayMult( global const float *dA, global const float *dB, global float *dC )
+void ArrayMult( global const float *dA, global const float *dB, global const float *dC, global float *dD )
 {
 	int gid = get_global_id( 0 );
 
-	dC[gid] = dA[gid] * dB[gid];
+	dD[gid] = dA[gid] * dB[gid];
 }
 
 kernel
-void ArrayMultAdd( global const float *dA, global const float *dB, global float *dC, global const float *dD )
+void ArrayMultAdd( global const float *dA, global const float *dB, global const float *dC, global float *dD )
 {
 	int gid = get_global_id( 0 );
 

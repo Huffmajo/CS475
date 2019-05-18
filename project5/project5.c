@@ -1,7 +1,7 @@
 /***********************************************************
  * Program: project5.c
  * Author: Joel Huffman
- * Last updated: 5/15/2019
+ * Last updated: 5/18/2019
  * Sources: http://web.engr.oregonstate.edu/~mjb/cs575/Projects/proj05.html
  ***********************************************************/
 #include <stdio.h>
@@ -86,8 +86,7 @@ main( int argc, char *argv[ ] )
 	for( int i = 0; i < NUM_ELEMENTS; i++ )
 	{
 		hA[i] = hB[i] = (float) sqrt(  (double)i  );
-		// *&*^&*^&*^%&*%^&*
-		hC[i] = hA[i];
+		hD[i] = hA[i];
 	}
 
 	size_t dataSize = NUM_ELEMENTS * sizeof(float);
@@ -114,7 +113,7 @@ main( int argc, char *argv[ ] )
 	if( status != CL_SUCCESS )
 		fprintf( stderr, "clCreateBuffer failed (2)\n" );
 
-	cl_mem dC = clCreateBuffer( context, CL_MEM_WRITE_ONLY, dataSize, NULL, &status );
+	cl_mem dC = clCreateBuffer( context, CL_MEM_READ_ONLY, dataSize, NULL, &status );
 	if( status != CL_SUCCESS )
 		fprintf( stderr, "clCreateBuffer failed (3)\n" );
 
@@ -122,7 +121,7 @@ main( int argc, char *argv[ ] )
 	if( status != CL_SUCCESS )
 		fprintf( stderr, "clCreateBuffer failed (4)\n" );
 
-	// 6. enqueue the 2 commands to write the data from the host buffers to the device buffers:
+	// 6. enqueue the 3 commands to write the data from the host buffers to the device buffers:
 
 	status = clEnqueueWriteBuffer( cmdQueue, dA, CL_FALSE, 0, dataSize, hA, 0, NULL, NULL );
 	if( status != CL_SUCCESS )
@@ -132,7 +131,7 @@ main( int argc, char *argv[ ] )
 	if( status != CL_SUCCESS )
 		fprintf( stderr, "clEnqueueWriteBuffer failed (2)\n" );
 
-	status = clEnqueueWriteBuffer( cmdQueue, dD, CL_FALSE, 0, dataSize, hB, 0, NULL, NULL );
+	status = clEnqueueWriteBuffer( cmdQueue, dC, CL_FALSE, 0, dataSize, hC, 0, NULL, NULL );
 	if( status != CL_SUCCESS )
 		fprintf( stderr, "clEnqueueWriteBuffer failed (3)\n" );
 
@@ -176,16 +175,15 @@ main( int argc, char *argv[ ] )
 	// 9. create the kernel object:
 
 	// use kernel for what method we are running
-//	if (METHOD == 1)
-//	{
-//		cl_kernel kernel = clCreateKernel( program, "ArrayMultAdd", &status );
-//		if( status != CL_SUCCESS )
-//			fprintf( stderr, "clCreateKernel failed\n" );
-//	}
-	
-	cl_kernel kernel = clCreateKernel( program, "ArrayMult", &status );
-	if( status != CL_SUCCESS )
-		fprintf( stderr, "clCreateKernel failed\n" );
+	#ifdef MULTADD
+		cl_kernel kernel = clCreateKernel( program, "ArrayMultAdd", &status );
+		if( status != CL_SUCCESS )
+			fprintf( stderr, "clCreateKernel failed\n" );
+	#else
+		cl_kernel kernel = clCreateKernel( program, "ArrayMult", &status );
+		if( status != CL_SUCCESS )
+			fprintf( stderr, "clCreateKernel failed\n" );
+	#endif
 
 	// 10. setup the arguments to the kernel object:
 
@@ -214,7 +212,6 @@ main( int argc, char *argv[ ] )
 
 	double time0 = omp_get_wtime( );
 
-	//&&&&&&&&&&&&&&&&&&&&&&&&&
 	time0 = omp_get_wtime( );
 
 	status = clEnqueueNDRangeKernel( cmdQueue, kernel, 1, NULL, globalWorkSize, localWorkSize, 0, NULL, NULL );
@@ -231,7 +228,6 @@ main( int argc, char *argv[ ] )
 		fprintf( stderr, "clEnqueueReadBuffer failed\n" );
 
 	// did it work?
-/*
 	for( int i = 0; i < NUM_ELEMENTS; i++ )
 	{
 		float expected = hA[i] * hB[i];
@@ -243,9 +239,18 @@ main( int argc, char *argv[ ] )
 				//i, LookAtTheBits(hA[i]), LookAtTheBits(hB[i]), LookAtTheBits(hC[i]), LookAtTheBits(expected) );
 		}
 	}
-*/
 	fprintf( stderr, "%8d\t%4d\t%10d\t%10.3lf GigaMultsPerSecond\n",
 		NUM_ELEMENTS, LOCAL_SIZE, NUM_WORK_GROUPS, (double)NUM_ELEMENTS/(time1-time0)/1000000000. );
+
+	// write benchmarks to results.txt
+	FILE* fpResults;
+	fpResults = fopen("results.txt", "a");
+
+	fprintf( fpResults, "%8d\t%4d\t%10d\t%10.3lf GigaMultsPerSecond\n",
+		NUM_ELEMENTS, LOCAL_SIZE, NUM_WORK_GROUPS, (double)NUM_ELEMENTS/(time1-time0)/1000000000. );
+
+	fclose(fpResults);
+
 
 #ifdef WIN32
 	Sleep( 2000 );
@@ -260,11 +265,7 @@ main( int argc, char *argv[ ] )
 	clReleaseMemObject(     dA  );
 	clReleaseMemObject(     dB  );
 	clReleaseMemObject(     dC  );
-
-	if (METHOD)
-	{
-		clReleaseMemObject(     dD  );
-	}
+	clReleaseMemObject(     dD  );
 
 	delete [ ] hA;
 	delete [ ] hB;
