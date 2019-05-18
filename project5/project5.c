@@ -75,7 +75,6 @@ main( int argc, char *argv[ ] )
 	for( int i = 0; i < NUM_ELEMENTS; i++ )
 	{
 		hA[i] = hB[i] = (float) sqrt(  (double)i  );
-		hD[i] = hA[i];
 	}
 
 	size_t dataSize = NUM_ELEMENTS * sizeof(float);
@@ -200,8 +199,6 @@ main( int argc, char *argv[ ] )
 	Wait( cmdQueue );
 
 	double time0 = omp_get_wtime( );
-
-	time0 = omp_get_wtime( );
 
 	status = clEnqueueNDRangeKernel( cmdQueue, kernel, 1, NULL, globalWorkSize, localWorkSize, 0, NULL, NULL );
 	if( status != CL_SUCCESS )
