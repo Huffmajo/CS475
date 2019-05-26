@@ -1,0 +1,24 @@
+    
+#!/bin/bash 
+
+# delete previous results.txt if it exists
+rm -f results.txt
+
+# print method and table headers
+echo "ArraySize   BlockSize   Performance  Probability"
+
+# block sizes
+for blocksize in 16 32 64
+do
+	# size of array
+	for size in 16000 32000 64000 128000 256000 512000
+	do
+		/usr/local/apps/cuda/cuda-9.2/bin/nvcc -DBLOCKSIZE=$blocksize -DNUMTRIALS=$size -use_fast_math project6.cu -o project6
+
+		# run program
+		./project6
+	done
+done
+
+# clean-up compiled file
+rm project6
