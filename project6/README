@@ -1,0 +1,7 @@
+Run the following commands to execute project6. The benchmark script will run all needed iterations 
+of the program with output to stdout and results.txt
+
+$ bash
+$ unzip project6.zip
+$ chmod +x benchmark
+$ benchmark
