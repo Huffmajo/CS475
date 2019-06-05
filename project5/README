@@ -1,0 +1,6 @@
+Run the following commands to execute project5 scripts and programs.
+
+$ bash
+$ unzip project5.zip
+$ chmod +x benchmark
+$ benchmark
