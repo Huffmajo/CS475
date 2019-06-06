@@ -1,0 +1,29 @@
+#!/bin/bash
+
+# delete any previous results
+rm -f results.txt
+rm -f autocorrelateResults.txt
+
+# openMP performance
+echo "OpenMP Performance"
+echo "Threads  avgPerformance  peakPerformance"
+
+# number of threads
+for t in 1 8 12 16 24 32
+do
+	# insert number of threads and compile
+	g++ -DNUMT=$t openmp.c -o openmp -lm -fopenmp
+
+	# run program
+	./openmp
+done
+
+# SIMD performance
+echo "SIMD Performance"
+
+
+# OpenCL performance
+echo "OpenCL Performance"
+
+# clean up compiled files
+rm openmp
