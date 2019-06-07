@@ -1,32 +1,29 @@
 /***********************************************************
- * Program: openmp.c
+ * Program: simd.c
  * Author: Joel Huffman
  * Last updated: 6/6/2019
  * Sources: http://web.engr.oregonstate.edu/~mjb/cs575/Projects/proj07b.html
  ***********************************************************/
-#include <math.h>
 #include <stdlib.h>
-#include <time.h>
 #include <omp.h>
 #include <stdio.h>
+#include <iostream>
+#include "simd.p4.h"
 
 #define NUMTRIES 20
 
 #ifndef _OPENMP
 	fprintf( stderr, "No OpenMP support!\n" );
-	return 1;
+	exit (1);
 #endif
 
-int main ()
+int main()
 {
 	int     Size;
 	float * Array;
 	float * Sums;
 	FILE *  fp;
 	int     i;
-
-	// set number of threads to utilize
-	omp_set_num_threads(NUMT);
 
 	// read in and store values from signal.txt
 	fp = fopen( "signal.txt", "r" );
@@ -45,7 +42,7 @@ int main ()
 	}
 	fclose( fp );
 
-	// do openMP work
+	// run SIMD work
 
 	double maxPerformance = 0.;
 	double avgPerformance = 0.;
@@ -56,22 +53,15 @@ int main ()
 		// start time
 		double time0 = omp_get_wtime();
 
-		#pragma omp parallel for default(none) shared(Size, Array, Sums)
 		for (int shift = 0; shift < Size; shift++)
 		{
-			float sum = 0.;
-			for (int i = 0; i < Size; i++)
-			{
-				sum += Array[i] * Array[i + shift];
-			}
-
-			Sums[shift] = sum;
+			Sums[shift] = SimdMulSum(Array, &Array[shift], Size);
 		}
 
 		// end time
 		double time1 = omp_get_wtime();
 
-		double megaCalcsPerSecond = (double)(Size * Size) / (time1 - time0) / 1000000.;
+		double megaCalcsPerSecond = (double) (Size * Size) / (time1 - time0) / 1000000.;
 		if (megaCalcsPerSecond > maxPerformance)
 		{
 			maxPerformance = megaCalcsPerSecond;
@@ -79,26 +69,13 @@ int main ()
 		avgPerformance += megaCalcsPerSecond;
 	}
 
-	// write Sums[x] vs shift results to file for sine wave function
-	if (NUMT == 1)
-	{
-		FILE* autoFp = fopen("autocorrelateResults.txt", "a");
-		for (int i = 1; i < 513; i++)
-		{
-			fprintf (autoFp, "%d\t%lf\n", i, Sums[i]);
-		}
-		fclose(autoFp);
-	}
-
 	avgPerformance /= NUMTRIES;
 
 	// print results
-	printf ("%d\t%lf\t%lf\n", NUMT, avgPerformance, maxPerformance);
+	printf ("%lf\t%lf\n",avgPerformance, maxPerformance);
 
 	// append results to results.txt
 	FILE* resultsFp = fopen("results.txt", "a");
-	fprintf (resultsFp, "%d\t%lf\t%lf\n", NUMT, avgPerformance, maxPerformance);
+	fprintf (resultsFp, "%lf\t%lf\n", avgPerformance, maxPerformance);
 	fclose(resultsFp);
-
-	return 0;
 }

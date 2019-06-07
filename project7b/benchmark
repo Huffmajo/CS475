@@ -1,12 +1,14 @@
 #!/bin/bash
 
-# delete any previous results
-rm -f results.txt
-rm -f autocorrelateResults.txt
+# overwrite any previous results
+echo "OpenMP Performance" >  results.txt
+echo "Sums[i] Shift" > autocorrelateResults.txt
 
 # openMP performance
+echo " "
 echo "OpenMP Performance"
 echo "Threads  avgPerformance  peakPerformance"
+echo "Threads  avgPerformance  peakPerformance" >> results.txt
 
 # number of threads
 for t in 1 8 12 16 24 32
@@ -19,11 +21,30 @@ do
 done
 
 # SIMD performance
+echo " "
 echo "SIMD Performance"
+echo "avgPerformance peakPerformance"
+echo "SIMD Performance" >> results.txt
+echo "avgPerformance peakPerformance" >> results.txt
 
+# compile files
+g++ simd.c simd.p4.cpp -o simd -lm -fopenmp
+
+# run program
+./simd
 
 # OpenCL performance
+echo " "
 echo "OpenCL Performance"
+echo "GlobalWSize LocalWSize #WorkGroups Performance"
+echo "OpenCL Performance" >> results.txt
+echo "avgPerformance peakPerformance" >> results.txt
+
+# compile file
+g++ -o openCL openCL.c /scratch/cuda-7.0/lib64/libOpenCL.so -lm -fopenmp
+
+# run program
+./openCL
 
 # clean up compiled files
 rm openmp
