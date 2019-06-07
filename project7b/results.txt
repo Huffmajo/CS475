@@ -1,0 +1,14 @@
+OpenMP Performance
+Threads  avgPerformance  peakPerformance
+1	332.077928	332.120437
+8	389.814400	393.471438
+12	3305.615359	3311.713081
+16	4231.583501	4271.402453
+24	3218.381484	3253.729733
+32	3885.163043	3950.229722
+SIMD Performance
+avgPerformance peakPerformance
+1769.826668	1771.891680
+OpenCL Performance
+avgPerformance peakPerformance
+   32768	  32	      1024	 49130.037
