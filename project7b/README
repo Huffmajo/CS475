@@ -1,0 +1,7 @@
+Run the following commands to execute project7b. The benchmark script will run all needed iterations 
+of the program with output to stdout, autoCorrelateResults.txt and  results.txt
+
+$ bash
+$ unzip project7b.zip
+$ chmod +x benchmark
+$ benchmark
