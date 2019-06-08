@@ -48,3 +48,5 @@ g++ -o openCL openCL.c /scratch/cuda-7.0/lib64/libOpenCL.so -lm -fopenmp
 
 # clean up compiled files
 rm openmp
+rm simd
+rm openCL
